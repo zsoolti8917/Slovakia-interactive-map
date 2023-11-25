@@ -5,30 +5,57 @@
   <title>Slovakia Districts Interactive Map</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <style>
+    .map-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+
     .district {
       fill: #ccc;
-      stroke: #fff;
-      stroke-linejoin: round;
+      stroke: #333;
+      stroke-width: 0.5px;
     }
+
     .district:hover {
       fill: #a00;
       cursor: pointer;
+      
     }
+
+    .active {
+        fill: #ffa500; /* Highlight color for the active district */
+      }
+
     svg {
-      width: 100%;
-      height: 100vh;
+      overflow: hidden;
+    }
+
+    #selectedDistrict {
+      font-family: sans-serif;
+      font-size: 20px;
+      font-weight: bold;
+      color: black;
     }
   </style>
 </head>
 <body>
-  <svg></svg>
+    <div id="selectedDistrict" style="text-align:center; font-size:20px; margin-top:20px;">Selected District: None</div>
+
+  <div class="map-container">
+    <svg></svg>
+  </div>
   <script>
     // Set the dimensions for the map
     const width = 960;
     const height = 600;
 
-    // Select the SVG element
-    const svg = d3.select("svg");
+    // Select the SVG element and add a group element for the paths
+    const svg = d3.select("svg")
+      .attr('width', width)
+      .attr('height', height)
+      .append('g');
 
     // Define a projection
     const projection = d3.geoMercator()
@@ -39,12 +66,12 @@
     const path = d3.geoPath()
       .projection(projection);
 
-    // Load the GeoJSON data
+    // Load and display the GeoJSON
     d3.json("districts.geojson").then(geojson => {
       // Compute the bounds of the GeoJSON data and the scale/translate
-      const b = path.bounds(geojson),
-            s = .95 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
-            t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
+      const bounds = path.bounds(geojson),
+            s = .95 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height),
+            t = [(width - s * (bounds[1][0] + bounds[0][0])) / 2, (height - s * (bounds[1][1] + bounds[0][1])) / 2];
 
       // Update the projection
       projection.scale(s).translate(t);
@@ -64,8 +91,9 @@
         const y = centroid[1];
         svg.selectAll("path").classed("active", false);
         d3.select(this).classed("active", true);
-        svg.transition().duration(750).attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(2)translate(" + -x + "," + -y + ")");
-      }
+        svg.transition().duration(750).attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(3)translate(" + -x + "," + -y + ")");
+        document.getElementById("selectedDistrict").innerHTML = "Selected District: " + (d.properties.NM3 || "Unknown");
+    }
     });
   </script>
 </body>
